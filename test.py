@@ -30,14 +30,14 @@ def get_all_candidate_names():
 def split_text(documents: list[Document]):
 
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=350,
+        chunk_size=500,
         chunk_overlap=75,
         add_start_index=True,   # Save position of the first token in the chunk w.r.t original text not necessary
     )
 
     chunks = text_splitter.split_documents(documents)
 
-    print(f"Split {len(documents)} document(s) into {len(chunks)} chunks (chunk_size={350}, overlap={75}).")
+    print(f"Split {len(documents)} document(s) into {len(chunks)} chunks (chunk_size={500}, overlap={75}).")
     
     if chunks:
         print("\nSample Chunk:\n\n", chunks[3].page_content[:500]) 
@@ -91,14 +91,11 @@ def query_resume_with_rag(query_text: str):
         print("No relevant chunks found.")
         return
 
-    '''print("\n🔍 Retrieved Chunks:")
-    for i, doc in enumerate(results, 1):
-        print(f"\n--- Chunk {i} ---\n{doc.page_content[:500]}...")'''
-
     context = "\n\n".join([doc.page_content for doc in results])
+    print("le context",context)
 
     messages = [
-        {"role": "system", "content": "You are a helpful assistant answering questions about a resume."},
+        {"role": "system", "content": "You are a helpful assistant answering questions about a resume. Answer ONLY in a short direct form. No full sentences, no repetition of the question, no explanations."},
         {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query_text}"}
     ]
 
