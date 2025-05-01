@@ -101,7 +101,7 @@ def query_resume_with_rag(query_text: str):
             "Answer briefly, directly, and without any explanation or commentary. "
             "If the answer is a eg. number or a date or a bunch of certificates, return only that. "
             "Do NOT restate the question. Do NOT explain the answer. Return just the answer."
-            "The current year is 2025"
+            "The current year is May 2025"
         )
     },
     {
@@ -133,7 +133,8 @@ def query_resume_with_rag(query_text: str):
         think_content = None
         final_answer = response_text.strip()
 
-    ''' Output both
+    ''' 
+    print("\nContext:",context,"\n)
     print("\nReasoning:\n")
     print(think_content if think_content else "[No <think> section found]")'''
 
