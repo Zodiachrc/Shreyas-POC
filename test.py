@@ -31,7 +31,7 @@ def split_text(documents: list[Document]):
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
-        chunk_overlap=75,
+        chunk_overlap=0,
         add_start_index=True,   # Save position of the first token in the chunk w.r.t original text not necessary
     )
 
@@ -81,7 +81,7 @@ def query_resume_with_rag(query_text: str):
         print(" Could not identify a relevant candidate from your query.")
         return
 
-    print(f" Matched candidate: {candidate} (Confidence: {score}%)")
+    print(f"Matched candidate: {candidate} (Confidence: {score}%)")
 
     results = vectorstore.similarity_search(query_text, k=3, filter={"candidate": candidate})
 
@@ -92,21 +92,54 @@ def query_resume_with_rag(query_text: str):
         return
 
     context = "\n\n".join([doc.page_content for doc in results])
-    print("le context",context)
 
     messages = [
-        {"role": "system", "content": "You are a helpful assistant answering questions about a resume. Answer ONLY in a short direct form. No full sentences, no repetition of the question, no explanations."},
-        {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query_text}"}
+    {
+        "role": "system",
+        "content": (
+            "You are an AI assistant helping with resume data extraction."
+            "Answer briefly, directly, and without any explanation or commentary. "
+            "If the answer is a eg. number or a date or a bunch of certificates, return only that. "
+            "Do NOT restate the question. Do NOT explain the answer. Return just the answer."
+            "The current year is 2025"
+        )
+    },
+    {
+        "role": "user",
+        "content": f"Context:\n{context}\n\nQuestion: {query_text}\nAnswer:"
+    }
     ]
 
+
     response = client.chat.completions.create(
-        model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+        model="deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free",
         messages=messages,
         max_tokens=512,
         temperature=0.6
     )
 
-    print(f"\nLLM Answer:\n{response.choices[0].message.content}")
+    response_text = response.choices[0].message.content
+
+    start_tag = "<think>"
+    end_tag = "</think>"
+
+    start_index = response_text.find(start_tag)
+    end_index = response_text.find(end_tag)
+
+    if start_index != -1 and end_index != -1:
+        think_content = response_text[start_index + len(start_tag):end_index].strip()
+        final_answer = response_text[end_index + len(end_tag):].strip()
+    else:
+        think_content = None
+        final_answer = response_text.strip()
+
+    ''' Output both
+    print("\nReasoning:\n")
+    print(think_content if think_content else "[No <think> section found]")'''
+
+    print("\nLLM Answer:\n")
+    print(final_answer)
+
 
 def main():
 
